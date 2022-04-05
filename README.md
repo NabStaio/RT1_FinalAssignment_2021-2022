@@ -13,9 +13,9 @@ The architecture should be able to get the user request, and let the robot execu
 Installing and Running
 ----------------------
 To install and run the project you have to create your own ROS workspace and in the src folder you have to:
-* Download the *final_assignment* package from professor Recchiuto [repository](https://github.com/CarmineD8/final_assignment) and put it in _src_, then go in the *final_assignment* directory and download the branch that matches your ROS distribution (in the terminal do ```bash $git checkout -your_ros_distro- ```).
+* Download the *final_assignment* package from professor Recchiuto [repository](https://github.com/CarmineD8/final_assignment) and put it in _src_, then go in the *final_assignment* directory and download the branch that matches your ROS distribution (in the terminal do ```$git checkout -your_ros_distro- ```).
 * DOwnload the *slam_gmapping* package from the professor Recchiuto [repository](https://github.com/CarmineD8/slam_gmapping) and follow the same step done for the *final_assignment* package.
-* Do ```bash $catkin_make``` in the ROOT FOLDER OF YOUR WORKSPACE.
+* Do ```$catkin_make``` in the root folder of your workspace.
 
 Then open two terminals because the user interface is used separately from the other nodes.
 
@@ -59,18 +59,16 @@ The *drive_simulator.launch* file simply launch three others launch files in whi
 
 Introduction
 ------------
-The environment in which the robot moves is :
+The robot will move in a Rviz and in a Gazebo simulation :
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_SecondAssignment_2021-2022/blob/main/images/tracciato.png" width="550" height="400">
+<img src="https://github.com/NabStaio/RT1_SecondAssignment_2021-2022/blob/main/images/gazebo.png" width="550" height="400">
 </p>
 
-This environment is provided by the stage_ros node and it is inside the my_world.world file in the folder world. The robot will know everything about the environment thanks to the stage_ros node.
-All the requirements in order to let the robot moves, avoiding the walls, are made in the robot_controller node, whereas the user node should constantly wait for an input by the user, which can either ask to increment or decrement the velocity, or to put the robot in the initial position (thanks to the std_srvs/Empty service). 
-Possible commands that the user can make:
-* i = accelerate the robot
-* d = decelerate the robot
-* r = reset its position
+<p align="center">
+<img src="https://github.com/NabStaio/RT1_SecondAssignment_2021-2022/blob/main/images/rviz.png" width="550" height="400">
+</p>
+
   
 
 Nodes
