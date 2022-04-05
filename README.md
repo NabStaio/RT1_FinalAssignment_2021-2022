@@ -62,11 +62,11 @@ Introduction
 The robot will move in a Rviz and in a Gazebo simulation :
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/gazebo.png" width="200" height="200">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/gazebo.PNG" width="200" height="200">
 </p>
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rviz.png" width="200" height="200">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rviz.PNG" width="200" height="200">
 </p>
 
   
