@@ -57,9 +57,9 @@ The *drive_simulator.launch* file simply launch three others launch files in whi
 </launch>
 ```
 
-Introduction
+Simulation Environment
 ------------
-The robot will move in a Rviz and in a Gazebo simulation :
+The robot will move in two simulations: a *Gazebo simulation* (first image) to simulate a real environment and a *Rviz one* (second image) to analyze what the robot see of the map:
 
 <p align="center">
 <img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/gazebo.PNG" width="500" height="500">
@@ -69,17 +69,18 @@ The robot will move in a Rviz and in a Gazebo simulation :
 <img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rviz.PNG" width="500" height="500">
 </p>
 
+The robot is equipped with a laser scan and it doesn't know the all map a priori, it will complete the mapping by moving around, adopting then a SLAM approach. 
   
 
 Nodes
 -----
-### Stage_ros node 
+### UI node 
 
 The stage_ros node subscribes to the /cmd_vel topic from the package `geometry_msgs` which provides a `Twist` type message to express the velocity of the robot in free space, splitted into its linear and angular parts (x,y,z).
 The stage_ros node also publishes on the `base_scan` topic, from the package called `sensor_msgs` that provides a `LaserScan`, a laser range-finder.
 We had also to call the service `reset_positions` from the `std_srvs` package in order to reset the robot position. In `std_srvs` it is contained the `Empty` type service.
 
-### Robot_controller node
+### Auto node
 
 In the robot_controller node there is the main code of the project. This node handles multiple information, moreover it contains the main structure of the code which allows the robot to avoid hitting wall and drive through the circuit without any problem. Furthermore the node permits to increment/decrement the velocity of the robot and reset its position (through the inputs given from keyboard and "passed" by the custom service `UserInterface.srv` (in the srv folder) that handles two elements: char command, that is the request from the client and float32 value, that is the response from the server; indeed this node is the server node that receives the request from the user node (client node). 
 In the `base_scan` topic, which provides datas about the laser that scans the surrounding environment, there is the type message `sensor_msgs/LaserScan`. The topic provides an array, which returns the distances between the robot and the obstacles; every distance is given by the array ranges[i] (i = 0,...,720) and it is computed considering each of 721 section in which the vision of the robot is divided, since the vision of the robot is included in a spectrum range of 180 degrees in front of it and expressed in radiant. 3 big subsections are considered (right, left and in front of the robot), inside the 0-720 spectrum, for the vision of the robot and i have computed the minimum distance between the robot and the obstacle for each subsection. 
@@ -181,7 +182,7 @@ The following control is implemented in the Driver function that will be called 
 
 The node also behaves like a PUBLISHER since it publish on the topic `/cmd_vel` the type message `cmd_vel geometry_msgs/Twist`, that regards the velocity of the robot, broken in its angular and linear parts (x,y,z). 
 
-### UI node
+### teleop node
 
 The UI node represents the interface of the user. Through the user node we can increase/decrease the velocity of the robot and reset its position by simple commands:
 * i --> accelerate the robot by 0.5
@@ -212,6 +213,9 @@ The service UserInterface.srv is made like this:
      float32 value
 ```
 Thanks to this service the request is sent to the robot_controller node (the request is a char, the one pressed on keyboard) and the server node (control node) will manage the request. No response will be sent to the user node (the response should have been a float32 value) since the service operate directly on the control node!
+
+### assistance node
+
 
 Nodes' Connection
 ---------
