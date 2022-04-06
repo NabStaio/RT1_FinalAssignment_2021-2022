@@ -84,7 +84,7 @@ it will stop and the goal is deleted, the goal can also be deleted by the user b
 
 Instructions' window:
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI.PNG" width="500" height="500">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI.PNG" width="500" height="300">
 </p>
 
 The node retrieves input in a `while loop` and `if statements` determines the setting of the parameters corresponding to the correct modality:
@@ -142,7 +142,7 @@ while not rospy.is_shutdown():
 Here the flowchart:
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI_flowchart.PNG" width="500" height="500">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI_flowchart.PNG" width="700" height="500">
 </p>
 
 
