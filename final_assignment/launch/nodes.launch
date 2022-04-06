@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+<param name="active" type="int" value="0" />
+
+<param name="des_pos_x" type="double" value="1" />
+<param name="des_pos_y" type="double" value="1" />
+
+
+<!--<node pkg="final_assignment" type="UI.py" name="UI" required="true" output="screen" />-->
+<node pkg="final_assignment" type="auto.py" name="auto" required="true" output="screen" />
+<node pkg="final_assignment" type="teleop.py" name="teleop" required="true" output="screen" /> 
+<node pkg="final_assignment" type="assistance.py" name="assistance" required="true" output="screen"/> 
+
+</launch>
