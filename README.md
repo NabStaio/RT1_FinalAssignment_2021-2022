@@ -75,10 +75,76 @@ The robot is equipped with a laser scan and it doesn't know the all map a priori
 Nodes
 -----
 ### UI node 
+The UI node will provide a user interface that interacts with the user. It pops up a window (image below) which provides instructions about how to use the simulation. The module retrieves user's inputs corresponding to different modalities:
+* **0 WAITING MODE**: The robot waits for what kind of modality it has to hire, indeed this mode is used to switch between behaviours
+* **1 AUTONOMOUS DRIVE**: The robot drives autonomously to a position given by the user, if the robot is not able to reach the target in a certain amount of time 
+it will stop and the goal is deleted, the goal can also be deleted by the user by typing 0 returning in a waiting mode.
+* **2 KEYBOARD DRIVE**: The robot is guided by the user with keyboard
+* **3 ASSISTANCE DRIVE**: The robot is again guided by the user with keyboard, but when an obstacle is in its sight it will avoid it autonomously.
 
-The stage_ros node subscribes to the /cmd_vel topic from the package `geometry_msgs` which provides a `Twist` type message to express the velocity of the robot in free space, splitted into its linear and angular parts (x,y,z).
-The stage_ros node also publishes on the `base_scan` topic, from the package called `sensor_msgs` that provides a `LaserScan`, a laser range-finder.
-We had also to call the service `reset_positions` from the `std_srvs` package in order to reset the robot position. In `std_srvs` it is contained the `Empty` type service.
+Instructions' window:
+<p align="center">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI.PNG" width="500" height="500">
+</p>
+
+The node retrieves input in a `while loop` and `if statements` determines the setting of the parameters corresponding to the correct modality:
+
+```python
+
+while not rospy.is_shutdown():
+	 
+		command = int(input('CHOOSE MODALITY: \n')) #Take the input from keyboard
+		
+		# WAITING MODALITY
+		if command == 0:
+			
+			...
+				
+			rospy.set_param('active', 0)# Setting the parameter to 0.
+			...
+				
+		# AUTONOMOUS DRIVE
+		elif command == 1:
+		
+			...
+			
+			des_x_input = float(input("INSERT X COORDINATE: "))
+			des_y_input = float(input("INSERT Y COORDINATE: "))
+			rospy.set_param('des_pos_x', des_x_input)
+			rospy.set_param('des_pos_y', des_y_input)
+			rospy.set_param('active', 1)
+			
+            ...
+			
+		# KEYBOARD DRIVE
+		elif command == 2:
+		
+			...
+						
+			rospy.set_param('active', 2)
+			...
+				
+		# ASSISTANCE DRIVE
+		elif command == 3:
+		
+			...
+
+			rospy.set_param('active', 3)
+			...
+					
+		else:
+			print("WRONG KEY, TRY AGAIN.")
+
+
+
+```
+
+Here the flowchart:
+
+<p align="center">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/UI_flowchart.PNG" width="500" height="500">
+</p>
+
 
 ### Auto node
 
