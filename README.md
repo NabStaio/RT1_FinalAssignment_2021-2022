@@ -250,7 +250,7 @@ while(1):
 ```
 
 ### Teleop node
-This node implements the _Keyboard Drive_ modality. The script rely on the ```teleop_twist_keyboard```module. 
+This node implements the _Keyboard Drive_ modality. The script relies on the ```teleop_twist_keyboard```module. 
 I decide to not modify all the template code because it fulfills the requirements of the assignment.
 The only line of code added is the ```if statement``` that checks if the value of the parameter ```active``` is 2 and starts the guidance of the robot
 through the keyboard.
@@ -336,7 +336,85 @@ CTRL-C to quit
 ```
 
 ### Assistance node
+This node implements the _Assistance Drive_ modality. The scripts is the same of the teleop module, but two function are added to match the behaviour 
+required, indeed the robot is able to avoid obstacles and take decisions autonomously when they are detected:
 
+* obstacle in **front** the robot will _stop_
+* obstacle in **front&right** the robot will _turn left_
+* obstacle in **front&left** the robot will _turn right_
+
+```python
+
+def clbk_laser(msg):
+    regions = {
+        'right':  min(min(msg.ranges[0:143]), 10),
+        'fright': min(min(msg.ranges[144:287]), 10),
+        'front':  min(min(msg.ranges[288:431]), 10),
+        'fleft':  min(min(msg.ranges[432:575]), 10),
+        'left':   min(min(msg.ranges[576:719]), 10),
+    }
+
+    take_action(regions)
+
+def take_action(regions):
+    msg = Twist()
+
+
+    #state_description = ''
+
+    if regions['front'] < 1:
+    	  
+    	#state_description = 'FRONT OBSTACLE! STOP!'
+    	vel.linear.x = 0
+    	vel.linear.y = 0
+    	vel.linear.z = 0
+
+    	vel.angular.x = 0
+    	vel.angular.y = 0
+    	vel.angular.z = 0
+    	
+
+
+    elif regions['front'] < 1 and regions['fright'] < 1:
+        #state_description = 'FRONT&RIGHT OBSTACLES! TURN LEFT!'
+        vel.linear.x = x*speed
+        vel.linear.y = y*speed
+        vel.linear.z = z*speed
+        vel.angular.x = 0
+        vel.angular.y = 0
+        vel.angular.z = turn
+       
+    elif regions['front'] < 1 and regions['fleft'] < 1:
+        #state_description = 'FRONT&LEFT OBSTACLES! TURN RIGHT!'
+        vel.linear.x = x*speed
+        vel.linear.y = y*speed
+        vel.linear.z = z*speed
+        vel.angular.x = 0
+        vel.angular.y = 0
+        vel.angular.z = -turn
+        
+    #else:
+        #state_description = 'unknonwn'
+        
+
+    
+    pub.publish(msg)
+```
+Then a subscription to ```/scan``` topic is needed to retrieve distances of type ```sensor_msgs/LaserScan ```, and for controlling the robot a publisher on topic 
+```cmd_vel``` with a message of type ```geometry_msgs/Twist```
+
+```python
+if __name__=="__main__":
+    settings = termios.tcgetattr(sys.stdin)
+    
+
+    rospy.init_node('assistance')
+    rate = rospy.Rate(5)
+    
+    curr_modality = rospy.get_param('/active')
+    sub = rospy.Subscriber('/scan', LaserScan, clbk_laser) #subscriber to scan to retrieve distances
+    pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1) #publisher to /cmd_vel
+```
 
 Nodes' Connection
 ---------
@@ -348,7 +426,13 @@ This is an image that show how nodes are connected to each other (thanks to the 
 </p>
 
 
-Conclusions
+Conclusions&Improvements
 -----------
-
-The robot is able to do a complete lap of the circuit without crushing on walls. Nevertheless, it has problems when its speed is drastically increased or when a continuous race with more than 2 laps is done. Therefore, the code could be improved by having an infinity race withouth stopping, also the UI could be more entertaining by adding more visual features. Hovewer this work in my opinion is sufficient to fulfill the requirements given by the professor. 
+This solution can sufficiently satisfy the requirements of the project:
+* The _UI node_ it's a simple graphical interface where the user still use the terminal to give commands. This node can be improved to have
+a more fashion way to interact with the user and a possibility to be launched together with the other modules.
+* In the _Autonomous node_ the robot relies on the ```move_base``` package that accomplishes the navigation task in a good way.
+What can be improved are the local and global planner of the package but it's out of scope.
+* In the _Keyboard node_ the ```teleop_twist_keyboard``` module works without problems    
+* In the _Assistance node_ everything works. In this case an improvement could be the addition of a custom server for the obstacle avoidance
+to give more modularity to the architecture.
