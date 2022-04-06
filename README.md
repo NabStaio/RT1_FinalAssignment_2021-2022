@@ -14,7 +14,7 @@ Installing and Running
 ----------------------
 To install and run the project you have to create your own ROS workspace and in the src folder you have to:
 * Download the *final_assignment* package from professor Recchiuto [repository](https://github.com/CarmineD8/final_assignment) and put it in _src_, then go in the *final_assignment* directory and download the branch that matches your ROS distribution (in the terminal do ```$git checkout -your_ros_distro- ```).
-* DOwnload the *slam_gmapping* package from the professor Recchiuto [repository](https://github.com/CarmineD8/slam_gmapping) and follow the same step done for the *final_assignment* package.
+* Download the *slam_gmapping* package from the professor Recchiuto [repository](https://github.com/CarmineD8/slam_gmapping) and follow the same step done for the *final_assignment* package.
 * Do ```$catkin_make``` in the root folder of your workspace.
 
 Then open two terminals because the user interface is used separately from the other nodes.
@@ -26,8 +26,10 @@ $run final_assignment UI.py
 
 in the second terminal launch the simulation and all the nodes:
 ```bash
-$run final_assignment drive_simulator.launch
+$run final_assignment drive_simulator.launch 2>/dev/null
 ```
+
+2>/dev/null is used to not show the warnings
 
 The *drive_simulator.launch* file simply launch three others launch files in which there is the *nodes.launch*: a file created to run the three nodes corresponding to the three different required modalities; hereafter the syntax:
 
@@ -40,7 +42,7 @@ The *drive_simulator.launch* file simply launch three others launch files in whi
 </launch>
 ```
 
-**nodes.launch**
+**nodes.launch**:
 ```xml
 <launch>
 
@@ -152,7 +154,7 @@ The Action Client-Service communicate via a "ROS Action Protocol", which is buil
 - ```MoveBaseAction```
 - ```MoveBaseGoal```
 
-## Functions
+#### Functions
 This paragraph shows the functions used to make the script more flexible.
 For handling the _Actionclient_ the ```act_client_init()``` initializes the goal message and when the node is active ```act_client_set_goal() ``` retrieves the new parameters and approprietly fill its fields.
 
@@ -260,7 +262,7 @@ Nodes' Connection
 This is an image that show how nodes are connected to each other (thanks to the command rosrun rqt_graph rqt_graph):
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rqt_graph.PNG" width="900" height="150">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rqt_graph.PNG" width="900" height="500">
 </p>
 
 
