@@ -29,7 +29,7 @@ in the second terminal launch the simulation and all the nodes:
 $run final_assignment drive_simulator.launch 2>/dev/null
 ```
 
-2>/dev/null is used to not show the warnings
+2>/dev/null is used to not show the warnings.
 
 The *drive_simulator.launch* file simply launch three others launch files in which there is the *nodes.launch*: a file created to run the three nodes corresponding to the three different required modalities; hereafter the syntax:
 
@@ -250,10 +250,92 @@ while(1):
 ```
 
 ### Teleop node
+This node implements the _Keyboard Drive_ modality. The script rely on the ```teleop_twist_keyboard```module. 
+I decide to not modify all the template code because it fulfills the requirements of the assignment.
+The only line of code added is the ```if statement``` that checks if the value of the parameter ```active``` is 2 and starts the guidance of the robot
+through the keyboard.
 
+```python
+if __name__=="__main__":
+    settings = termios.tcgetattr(sys.stdin)
+    
 
+    rospy.init_node('teleop')
+    rate = rospy.Rate(5)
+    
+    curr_modality = rospy.get_param('/active')
 
-### assistance node
+   ...
+
+    try:
+        pub_thread.wait_for_subscribers()
+        pub_thread.update(x, y, z, th, speed, turn)
+        
+        
+        while not rospy.is_shutdown():
+            
+            curr_modality = rospy.get_param('/active') #get the parameter of the current modality
+            #if i'm inKEYBOARD MODE
+            if curr_modality == 2:
+             
+             key = getKey(key_timeout)
+             if key in moveBindings.keys():
+                x = moveBindings[key][0]
+                y = moveBindings[key][1]
+                z = moveBindings[key][2]
+                th = moveBindings[key][3]
+             elif key in speedBindings.keys():
+                speed = speed * speedBindings[key][0]
+                turn = turn * speedBindings[key][1]
+                print(vels(speed,turn))
+                if (status == 14):
+                    print(msg)
+                status = (status + 1) % 15
+             else:
+                # Skip updating cmd_vel if key timeout and robot already
+                # stopped.
+                if key == '' and x == 0 and y == 0 and z == 0 and th == 0:
+                    continue
+                x = 0
+                y = 0
+                z = 0
+                th = 0
+                if (key == '\x03'):
+                    break
+ 
+             pub_thread.update(x, y, z, th, speed, turn)
+             
+            else:
+            	rate.sleep()
+    ...
+```
+
+Here the instructions to interact with the robot (this message is shown in the terminal where you run the UI, when modality 2 and 3 are selected):
+
+```python
+"""
+Reading from the keyboard  and Publishing to Twist!
+---------------------------
+Moving around:
+   u    i    o
+   j    k    l
+   m    ,    .
+For Holonomic mode (strafing), hold down the shift key:
+---------------------------
+   U    I    O
+   J    K    L
+   M    <    >
+t : up (+z)
+b : down (-z)
+anything else : stop
+q/z : increase/decrease max speeds by 10%
+w/x : increase/decrease only linear speed by 10%
+e/c : increase/decrease only angular speed by 10%
+CTRL-C to quit
+"""
+```
+
+### Assistance node
 
 
 Nodes' Connection
