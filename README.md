@@ -147,138 +147,109 @@ Here the flowchart:
 
 
 ### Auto node
+This node implements the _Autonomous Drive_ modality. The script makes use of an _action client_ istance to establish a direct communication with the robot and set and cancel location goals.
+The Action Client-Service communicate via a "ROS Action Protocol", which is built on top of ROS messages. The client and server then provide a simple API for users to request goals (on the client side) or to execute goals (on the server side) via function calls and callbacks. In this code only the _Actionclient_ side is implemented using the already existing server of the following action messages:
+- ```MoveBaseAction```
+- ```MoveBaseGoal```
 
-In the robot_controller node there is the main code of the project. This node handles multiple information, moreover it contains the main structure of the code which allows the robot to avoid hitting wall and drive through the circuit without any problem. Furthermore the node permits to increment/decrement the velocity of the robot and reset its position (through the inputs given from keyboard and "passed" by the custom service `UserInterface.srv` (in the srv folder) that handles two elements: char command, that is the request from the client and float32 value, that is the response from the server; indeed this node is the server node that receives the request from the user node (client node). 
-In the `base_scan` topic, which provides datas about the laser that scans the surrounding environment, there is the type message `sensor_msgs/LaserScan`. The topic provides an array, which returns the distances between the robot and the obstacles; every distance is given by the array ranges[i] (i = 0,...,720) and it is computed considering each of 721 section in which the vision of the robot is divided, since the vision of the robot is included in a spectrum range of 180 degrees in front of it and expressed in radiant. 3 big subsections are considered (right, left and in front of the robot), inside the 0-720 spectrum, for the vision of the robot and i have computed the minimum distance between the robot and the obstacle for each subsection. 
-This is the function:
+## Functions
+This paragraph shows the functions used to make the script more flexible.
+For handling the _Actionclient_ the ```act_client_init()``` initializes the goal message and when the node is active ```act_client_set_goal() ``` retrieves the new parameters and approprietly fill its fields.
 
-```cpp
-double minimum(int first_index, int last_index, float array[]){
+```python
+def act_client_set_goal():
 
-	//as the minimum distance is set a large value that will then be compared
-	//with all the values between the first value and the last one in the ranges array
-	double min_dist = 35;
+
+	goal.target_pose.pose.position.x = desired_x
+	goal.target_pose.pose.position.y = desired_y
+	print("START AUTONOMOUS DRIVE \n")
+	client.send_goal(goal,done)
+
+def act_client_init():
+
+	global client 
+	global goal 
 	
-	for(int i = first_index; i<= last_index; i++){
-		if(array[i]<=min_dist){
-			min_dist = array[i];	
-		}
-		
-	}
-	return min_dist;
-}
+	client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+	client.wait_for_server()
+	
+	goal = MoveBaseGoal()
+	goal.target_pose.header.frame_id = "map"
+	goal.target_pose.header.stamp = rospy.Time.now()
+	goal.target_pose.pose.orientation.w = 1.0
 ```
-These are the minimun distances for each subsection (done in the Driver function):
 
-```cpp
-	double front, right, left; //minimum distances on the three directions
-	//right measure from 0° to 30°
-	right = minimum(0, 120, info_distance);
-	//front measure from 75° to 105°
-	front = minimum(300, 420, info_distance);
-	//left measure from 150° to 180°
-	left = minimum(600, 720, info_distance);
-}
+The following image shows the Rviz graphical interface once the goal is set (-0.05, -0.05):
+
+<p align="center">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/Set_goal.PNG" width="500" height="500">
+</p>
+
+The argument ```done``` of the ```send_goal``` function is a call-back needed for retrieving info on the goal reaching status. This function gets info from the server side. There are many different values associated to the status parameter during execution ending. The only one used in the code is the status 3 related to the goal achievement:
+
+```python
+def done(status,result):
+	global flag_goal
+	
+	if status==3:
+		print("YOU'RE REACHED THE GOAL \n")
+		flag_goal = 1
 ```
-The node permits to increment/decrement the velocity of the robot and reset its position and it is made handling the request coming from the user node (no response are sent to the user node) : 
 
-```cpp
-	// if the request sent from the user is 'i' the velocity is incremented
-	if(req.command == 'i'){
-		custom_acc += 0.5;
-		
-		//ROS_INFO("\nIncrement of acceleration :@[%f]", vel.linear.x);
-	}
-	//if the request sent from the user is 'd' the velocity is decreased
-	if(req.command == 'd'){
-		custom_acc -= 0.5;
-		
-		
-		//ROS_INFO("\nIncrement of acceleration :@[%f]", vel.linear.x);
+In this case i decide to not use the timeout of the server, but a personal timeout event for deleting the goal if the robot doesn't reach it in time:
+
+```python
+def timeout(event):
+	if curr_modality==1:
+		print ("GOAL TIME EXPIRED :" + str(event.current_real))
+		print("ROBOT DIDN'T REACH THE TARGET POSITION WITHIN A 3min\n")
+		rospy.set_param('active', 0)
+```
+
+The ```cancel_goal``` part is activated if the robot goes in its _Waiting mode_ when the user cancel the goal by typing 0. This process is managed by if statements and flags for tracking the current modality:
+
+```python
+while(1):
+	
+		update_parameters()	
+		#if i'm in autonomous mode
+		if curr_modality==1:
 			
-	}
-	//if the request sent from the user is 'r' robot goes back to the initial position
-	if(req.command == 'r'){
-		ros::service::call("/reset_positions", pose_res);
-	}
-	
-	if(req.command != 'i' && req.command != 'd' && req.command != 'r'){
-		std::cout<<"NOT SUPPORTED\n"<<std::endl;
-		fflush(stdout);
-	}
-	 
-	res.value = custom_acc;
-	return true;
-
+			if flag == 1:
+				act_client_set_goal() 
+				rospy.Timer(rospy.Duration(180),timeout) #timer for the timeout event
+				
+				flag = 0
+				flag_ = 1
+		
+		else:
+			#Initial WAITING MODE 
+			if flag == 0 and flag_==0:
+				
+			#	print("STOP MODALITY 1 \n")
+				flag = 1
+			
+			#WAITING MODE once the user stop the robot
+			if flag == 0 and flag_==1:
+				
+				
+				if flag_goal==1:
+					# If the goal is reached I will not cancel the goal. 
+					print("STOP MODALITY 1")
+					flag = 1
+					flag_ = 0
+					flag_goal = 0
+			
+				else:
+					print("GOAL DELETED, STOP MODALITY 1 ")
+					client.cancel_goal()
+					flag = 1
+					flag_2 = 0
 ```
-### custom_acc is a globar variable that increment/decrement by 0.5 each time a keyboard's button (i/d) is pressed by the user. 
 
-These are the simple statements in order to let the robot drive easily through the circuit:
-The following control is implemented in the Driver function that will be called whenever a message is posted on the `base_scan` topic.
+### Teleop node
 
-```cpp
-	//if there is a curve to do
-	if(front<d_th){
-		//if right wall is near wrt left wall turn right
-		if(right<left){
-			//turn_right();
-			vel.linear.x = 0.5;
-			vel.angular.z = 1;
-		}
-		//if the opposite turn left
-		else if(right>left){
-			//turn_left();
-			vel.linear.x = 0.5;
-			vel.angular.z = -1;
-		}
-	
-	}
-	//if no curve to do
-	else{
-		vel.linear.x = 1.0 + custom_acc;
-  		vel.angular.z = 0.0;
-  		if(vel.linear.x<=0){
-  			vel.linear.x = 0.0;
-  		}
-	}
-	
-	pub_vel.publish(vel);
-```
-#### If the velocity is drastically incremented the robot crushes.
 
-The node also behaves like a PUBLISHER since it publish on the topic `/cmd_vel` the type message `cmd_vel geometry_msgs/Twist`, that regards the velocity of the robot, broken in its angular and linear parts (x,y,z). 
-
-### teleop node
-
-The UI node represents the interface of the user. Through the user node we can increase/decrease the velocity of the robot and reset its position by simple commands:
-* i --> accelerate the robot by 0.5
-* d --> decelerate the robot by 0.5 
-* r --> reset robot position. 
-
-All the commmands are detected from the keyboards thanks to this function:
-
-```cpp
-char Get_command(void){
-	char comm;
-	
-	std::cout<<"Welcome player!\n";
-	std::cout<<"If you want to increase the speed press <i>\n";
-	std::cout<<"If you want to decrease the speed press <d>\n";
-	std::cout<<"If you want to reset the position press <r>\n";
-	std::cout<<"Please select: ";
-	std::cin>>comm;
-	
-	return comm;
-}
-```
-The service UserInterface.srv is made like this:
-
-``` xml
-     char command
-     ---
-     float32 value
-```
-Thanks to this service the request is sent to the robot_controller node (the request is a char, the one pressed on keyboard) and the server node (control node) will manage the request. No response will be sent to the user node (the response should have been a float32 value) since the service operate directly on the control node!
 
 ### assistance node
 
@@ -289,7 +260,7 @@ Nodes' Connection
 This is an image that show how nodes are connected to each other (thanks to the command rosrun rqt_graph rqt_graph):
 
 <p align="center">
-<img src="https://github.com/NabStaio/RT1_SecondAssignment_2021-2022/blob/main/images/rosgraph.png" width="900" height="150">
+<img src="https://github.com/NabStaio/RT1_FinalAssignment_2021-2022/blob/main/images/rqt_graph.PNG" width="900" height="150">
 </p>
 
 
